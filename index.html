@@ -1,0 +1,146 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://unpkg.com https://*.tile.openstreetmap.org https://project-osrm.org https://qrserver.com 'unsafe-inline' data: blob:;">
+    <title>OpenRouteValue v6.0 – Secure Multi-Modal & UAV Open Toolkit</title>
+    <link rel="stylesheet" href="https://unpkg.com" />
+    <style>
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #eff6ff;
+            --accent: #047857;
+            --accent-light: #ecfdf5;
+            --uav: #0369a1;
+            --uav-light: #e0f2fe;
+            --warn-bg: #fef3c7;
+            --warn-text: #92400e;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #475569;
+            --border: #cbd5e1;
+            --font-scale: 1;
+        }
+
+        /* High Contrast & Large Text Accessibility Mode (WCAG 2.1 AAA) */
+        body.high-contrast {
+            --primary: #000000;
+            --primary-light: #facc15;
+            --accent: #000000;
+            --accent-light: #a3e635;
+            --uav: #000000;
+            --uav-light: #38bdf8;
+            --bg: #ffffff;
+            --card: #ffffff;
+            --text: #000000;
+            --muted: #111827;
+            --border: #000000;
+            --font-scale: 1.15;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); max-width: 500px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 25px rgba(0,0,0,0.08); font-size: calc(16px * var(--font-scale)); }
+        
+        header { background: #0f172a; color: white; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: calc(1.05rem * var(--font-scale)); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        header span.badge { font-size: 0.65rem; background: #0284c7; color: white; padding: 3px 8px; border-radius: 10px; font-weight: 700; }
+        
+        .btn-contrast { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 5px 9px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+        body.high-contrast .btn-contrast { background: #facc15; color: #000000; border-color: #000000; }
+
+        .security-bar { background: #1e293b; color: #cbd5e1; font-size: 0.68rem; padding: 5px 16px; display: flex; justify-content: space-between; }
+        .security-bar span.ok { color: #34d399; font-weight: 600; }
+
+        .nav-grid { display: grid; grid-template-columns: 1fr 1fr; background: var(--card); border-bottom: 2px solid var(--border); }
+        .nav-item { padding: 10px; text-align: center; font-size: calc(0.82rem * var(--font-scale)); font-weight: 700; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; }
+        .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); background: var(--primary-light); }
+
+        .alert-banner { display: none; background: var(--warn-bg); color: var(--warn-text); font-size: calc(0.75rem * var(--font-scale)); padding: 9px 14px; border-bottom: 1px solid var(--border); font-weight: 600; line-height: 1.35; }
+        .alert-banner.danger { background: var(--danger-bg); color: var(--danger-text); }
+        .alert-banner.visible { display: block; }
+
+        .controls { padding: 14px; background: var(--card); border-bottom: 2px solid var(--border); }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .control-group { margin-bottom: 10px; }
+        .control-group label, .field-label { display: block; font-size: calc(0.7rem * var(--font-scale)); font-weight: 700; color: var(--muted); margin-bottom: 4px; text-transform: uppercase; }
+        select { width: 100%; padding: 8px; border: 1.5px solid var(--border); border-radius: 8px; font-size: calc(0.84rem * var(--font-scale)); background: var(--card); color: var(--text); font-weight: 600; }
+        
+        .slider-header { display: flex; justify-content: space-between; font-size: calc(0.8rem * var(--font-scale)); font-weight: 700; color: var(--primary); margin-bottom: 4px; }
+        input[type="range"] { width: 100%; accent-color: var(--primary); }
+
+        .quick-tools { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px; }
+        .tool-btn { padding: 8px 4px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); font-size: calc(0.72rem * var(--font-scale)); font-weight: 700; color: var(--text); cursor: pointer; text-align: center; }
+        .tool-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+        #map { height: 230px; width: 100%; z-index: 1; border-bottom: 2px solid var(--border); background: #e2e8f0; }
+
+        .results { padding: 14px; flex-grow: 1; }
+        .scenario-card { background: var(--card); border: 2px solid var(--border); border-radius: 12px; padding: 12px; margin-bottom: 12px; cursor: pointer; }
+        .scenario-card.selected { border-color: var(--primary); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); }
+
+        .tag { font-size: calc(0.66rem * var(--font-scale)); font-weight: 700; padding: 3px 7px; border-radius: 6px; text-transform: uppercase; display: inline-block; margin-bottom: 6px; border: 1px solid var(--border); }
+        .tag-good { background: var(--primary-light); color: var(--primary); }
+        .tag-best { background: var(--accent-light); color: var(--accent); }
+        .tag-uav { background: var(--uav-light); color: var(--uav); }
+
+        .metrics { display: flex; flex-wrap: wrap; gap: 8px; font-size: calc(0.78rem * var(--font-scale)); font-weight: 700; margin-bottom: 10px; background: var(--bg); padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); }
+        .timeline { border-left: 2px dashed var(--border); margin-left: 8px; padding-left: 14px; }
+        .step { position: relative; margin-bottom: 9px; font-size: calc(0.82rem * var(--font-scale)); }
+        .step::before { content: ""; position: absolute; left: -19px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+        .step-title { font-weight: 700; }
+        .step-meta { font-size: calc(0.74rem * var(--font-scale)); color: var(--muted); display: flex; justify-content: space-between; margin-top: 2px; }
+
+        .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); gap: 6px; flex-wrap: wrap; }
+        .hash-badge { font-family: monospace; font-size: 0.66rem; color: var(--text); background: var(--bg); padding: 3px 6px; border-radius: 4px; border: 1px solid var(--border); font-weight: 600; }
+        .btn-action-sm { font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; border: 1.5px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; font-weight: 700; }
+
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); z-index: 2000; align-items: center; justify-content: center; padding: 16px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { background: var(--card); border: 2px solid var(--border); border-radius: 12px; max-width: 420px; width: 100%; overflow: hidden; }
+        .modal-header { padding: 11px 14px; background: #0f172a; color: white; display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; font-weight: 700; }
+        .modal-body { padding: 14px; text-align: center; }
+        canvas#fallbackCanvas { width: 100%; height: 180px; background: #0f172a; border-radius: 8px; display: block; }
+        .qr-box { padding: 12px; background: white; display: inline-block; border-radius: 8px; border: 2px solid #0f172a; margin: 8px 0; }
+
+        footer { text-align: center; padding: 10px; font-size: 0.68rem; color: var(--muted); border-top: 1px solid var(--border); background: var(--card); }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>OpenRouteValue <span class="badge">v6.0 Ultimate</span></h1>
+    <button class="btn-contrast" id="btnContrast" onclick="toggleHighContrast()" aria-label="Toggle High Contrast Accessibility Mode">👁️ High Contrast</button>
+</header>
+
+<div class="security-bar">
+    <span class="ok" id="netStatus">🛡️ Zero-Trust • Offline-First Ready</span>
+    <span>CSP + SHA-256 Verified</span>
+</div>
+
+<!-- Region Selector -->
+<div class="nav-grid" role="tablist">
+    <div class="nav-item active" id="city-sofia" role="tab" onclick="selectCity('sofia')">🏛️ SOFIA PILOT</div>
+    <div class="nav-item" id="city-burgas" role="tab" onclick="selectCity('burgas')">🌊 BURGAS & BAY</div>
+</div>
+
+<!-- Dynamic Event & U-space Alert Banner -->
+<div class="alert-banner" id="alertBanner" role="alert"></div>
+
+<div class="controls">
+    <div class="row-2">
+        <div>
+            <label class="field-label" for="profileSelect">MISSION PROFILE</label>
+            <select id="profileSelect" onchange="changeProfile(this.value)">
+                <option value="human">🚶♂️ Citizen / Traveler</option>
+                <option value="uav">🛸 UAV / Drone Operator</option>
+            </select>
+        </div>
+        <div>
+            <label class="field-label" for="modeSelect">MOBILITY MODE</label>
+            <select id="modeSelect" onchange="changeMode(this.value)">
+                <option value="walk">🚶 Walking (0.00 €)</option>
