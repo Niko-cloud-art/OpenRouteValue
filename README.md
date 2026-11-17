@@ -1,9 +1,4 @@
 # OpenRouteValue---
-
-### Част 2: Финален файл `README.md` (на английски език)
-
-Поставете този текст във файла **`README.md`** на вашето хранилище в GitHub.
-
 ```markdown
 # OpenRouteValue (v6.0 Ultimate)
 
